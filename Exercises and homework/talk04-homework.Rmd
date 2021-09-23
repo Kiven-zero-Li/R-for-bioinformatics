@@ -51,7 +51,21 @@ knit: (
 
 ```{r}
 ## 代码写这里，并运行；
-
+rm(list=ls())
+x<-c('GEM','JJ Lin','Jay Chou')
+y<-c(100,90,80)
+z<-c(90,95,100)
+library(readr)
+a<-read.csv('data/states1.csv')[1:4,1:5]
+a
+save(x,y,z,a,file='talk_04_R_session_homework.RData')
+ls()
+rm(list=ls())
+ls()
+load('talk_04_R_session_homework.RData')
+ls()
+rm(y,z)
+ls()
 ```
 
 ## 练习与作业2：Factor基础
@@ -74,7 +88,16 @@ knit: (
 
 ```{r}
 ## 代码写这里，并运行；
-
+(x <- as.factor(c("single", "married", "married", "single")));
+x[length(x)+1]<-'single'
+x
+x[length(x)+1]<-'married'
+x
+'题目中`x[3] <- "widowed不能成功，应按如下方式'
+levels(x)<-c(levels(x),'widowed')
+x
+x[length(x)+1]<-'widowed'
+x
 ```
 
 ------------------------------------------------------------------------
@@ -87,7 +110,15 @@ knit: (
 
 ```{r}
 ## 代码写这里，并运行；
-
+month_levels <- c(
+"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+)
+mon <- factor(c("Mar","Nov","Mar","Aug","Sep",
+         "Jun","Nov","Nov","Oct","Jun",
+         "May","Sep","Dec","Jul","Nov"),
+         level=month_levels);
+sort(mon)
 ```
 
 
@@ -102,7 +133,13 @@ knit: (
 
 ```{r}
 ## 代码写这里，并运行；
-
+rm(list=ls())
+library(forcats)
+'考虑到数据很大'
+'取第二列、第三列，进行举例'
+a<-gss_cat[1:10,2]
+str(a)
+fct_inorder(a$marital)
 ```
 
 ## 练习与作业3：用 mouse genes 数据做图
@@ -119,5 +156,13 @@ knit: (
 
 ```{r}
 ## 代码写这里，并运行；
-
+rm(list=ls())
+library(readr)
+library(dplyr)
+mouse_genes<-read.delim(
+  'H:/第五学期/R-for-bioinformatics/data/talk04/mouse_genes_biomart_sep2018.txt',sep='\t',quote='')
+mouse.chr_1_19 <- subset( mouse_genes, Chromosome.scaffold.name %in% 1:19 );
+## plot length distribution --
+boxplot( Transcript.length..including.UTRs.and.CDS. ~ Chromosome.scaffold.name,
+data = mouse.chr_1_19, las = 2 );
 ```

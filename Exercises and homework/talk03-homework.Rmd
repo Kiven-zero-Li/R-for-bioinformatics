@@ -206,11 +206,30 @@ df_3
 
 **问：** `seq`函数中的`along.with` 参数的意义是什么？请举例说明。
 
-答：
+答：seq函数的目的时返回一个from to的向量，along.with是对于这个向量返回值的一个参数
+
+官方文档提到的是along.with take the length from the length of this argument. 也就是说使生成的向量的长度与along.with这个参数的长度一致，并且没有其他特别要求的情况下，以等步长的形式生成该向量
+
+简单地说，along.with表示产生的等间隔数列与向量具有相同的长度
+
+举例如下
+
+a为1，2，3，...，10，长度为10，在指定along.with=a的时候，创建出来的b c的长度均为10
+
+而在不指定along.with=a的时候，b_的值为从2到20以1为步长的所有值，长度为19，可见along.with的作用就是产生等间隔数列，且该向量与along.with的参数向量长度一致
 
 ```{r}
 ## 代码写这里，并运行；
-
+a<-1:10
+b<-seq(2,20,along.with=a)
+b_<-seq(2,20)
+c<-seq(0,100,along.with=a)
+a
+b
+b_
+c
+df_temp<-data.frame(a,b,c)
+df_temp
 ```
 
 ------------------------------------------------------------------------
@@ -295,7 +314,7 @@ cbind(df3, newcol = 1:2);
 
 答：通过运行代码，可以发现
 
-2. 增加一列，其长度是1； 3. 增加一列，其长度是10； 4. 增加一列，其长度是2 这三个是可以的，因为其长度正好是行数可以整除的数：10/1=10；10/10=1；10/2=5，可以完成并行计算或者说循环补齐
+2.  增加一列，其长度是1； 3. 增加一列，其长度是10； 4. 增加一列，其长度是2 这三个是可以的，因为其长度正好是行数可以整除的数：10/1=10；10/10=1；10/2=5，可以完成并行计算或者说循环补齐
 
 但5. 增加一列，其长度是3 这一条不行，出现报错
 
@@ -334,6 +353,8 @@ tibble(
 
 -   `<dttm>`
 -   `<date>`
+-   还有int dbl chr lgl fctr
+-   以上分别表示：日期+时间；日期；integer；double；character；逻辑数据类型；代表因子类型
 
 等；
 
@@ -355,7 +376,22 @@ tibble(
 
 ```{r}
 ## 代码写这里，并运行；
-
+df <- tibble(
+  x = runif(5),
+  y = rnorm(5)
+)
+str(df)
+df
+tb1<-as_tibble(df['x'])
+cat('tb1的数据类型为tibble T/F',is_tibble(tb1),'\n')
+tb1
+tb2<-df[['y']]
+# 通过查找，发现也可以用先转换为matrix在转换为vector的方法
+# 代码如下
+# tb2<-as.matrix(tb2[,'y'])
+# tb2<-as.vector(tb2)
+cat('tb2的数据类型为vector T/F',is.vector(tb2),'\n')
+tb2
 ```
 
 ------------------------------------------------------------------------
@@ -366,10 +402,11 @@ tibble(
 ## 代码写这里，并运行；
 ## 新tibble, with defined columns ... 创建表头
 tb <- tibble( name = character(), age = integer(), salary = double() );
-
 ##增加三行随机数据；
-
-
+tb<-add_row(tb,name=sample(LETTERS,3),
+            age=sample(30:50,3),
+            salary=sample(3000:5000,3))
+tb
 ```
 
 ------------------------------------------------------------------------
@@ -386,7 +423,11 @@ tb <- tibble( name = character(), age = integer(), salary = double() );
 
 问：为什么？tibble 循环的规则是什么？
 
-答：
+答：因为tibble的recycling仅限于长度为1或等长；而data.frame则为整除即可，
+
+所以对于`data.frame(a = 1:6, b = LETTERS[1:2])`是可以运行的，因为6/2=3，可以整除，然后循环补齐即可
+
+而对于`tibble(a = 1:6, b = LETTERS[1:2]);`是不行的，因为b的长度为2，相当于要要循环的长度不为1，而是2，同时a的长度是6，二者也不等长，所以是不行的
 
 ------------------------------------------------------------------------
 
@@ -394,7 +435,39 @@ tb <- tibble( name = character(), age = integer(), salary = double() );
 
 问：这个两个函数的用途是什么？请用 `iris` 这个系统自带变量举例说明。
 
-答：
+答：attach函数的用法如下：
+
+attach(what, pos = 2L, name = deparse(substitute(what), backtick=FALSE),
+
+warn.conflicts = TRUE)
+
+CSDN上找到的说法如下：
+
+1.attach()是对what添加路径索引，避免重复输入what名称，参数解释如下：
+
+what：数据框或列表；
+
+pos=2L：添加的路径存储的位置，一般默认即可。在对多个数据添加索引时，此位置会变成3L,4L,5L...detach()撤销索引路径时，会撤销对应位置的索引储存，具体例子见后；
+
+name：不懂，遇见需要的情况再补充；
+
+backtick=FALSE：反引号，经过测试，该参数固定为FALSE不可调，再调用索引时会用到；
+
+warn.conflicts：是否打印警告。
+
+2.**detach()**是撤销attach()建立的路径索引，往往二者配套使用。
+
+简单地说，按个人理解，attach()就是使括号内的参数添加到环境变量，使其内的内容可以直接被调用，而不用通过 \$ 来引用；detach就可以认为是attach()的逆操作，也就是说将该参数从环境变量中删除，使其内的参数不能直接被调用，需要用 \$ 才能调用
+
+举例如下，可以发现，如果不用attach，就必须用iris\$Sepal.Width，而如果用attach，将会弹出iris的列名，并且直接用列名操作即可，不需要用iris\$
+
+```{r}
+head(iris,n=5);
+head(iris$Sepal.Width,n=5)
+attach(iris)
+  head(Sepal.Width,n=5)
+detach(iris)
+```
 
 ------------------------------------------------------------------------
 
@@ -406,24 +479,75 @@ tb <- tibble( name = character(), age = integer(), salary = double() );
 
 ```{r}
 ## 代码写这里，并运行；
-
+if (class(airquality)[1]=='tibble'){
+  cat('airquality 的类型是tibble，不用转换')
+}else
+{
+  cat('airquality 的类型不是tibble，需要转换\n')
+  tibble_airquality=as_tibble(airquality)
+}
+class(airquality)
+str(tibble_airquality)
 ```
 
 ------------------------------------------------------------------------
 
 -   **问：`tibble::enframe`函数的用途是什么？请举例说明：**
 
-答：
+答：官方文档Help给出来的说法是：Converting vectors to data frames, and vice versa. 更详细的说法是：enframe() converts named atomic vectors or lists to one- or two-column data frames. For a list, the result will be a nested tibble with a column of type list. For unnamed vectors, the natural sequence is used as name column. 简单地说，就是将一个vector或者list转变成一列或两列的data frames
+
+举例如下
+
+```{r}
+l<-list(a=sample(1:10,3),b=sample(1:10,3))
+l
+l_tb<-tibble::enframe(l)
+l_tb
+```
 
 ------------------------------------------------------------------------
 
 -   **简述`tibble`相比`data.frame`的优势？并用实例展示**
 
-答：
+答：tibble对data.frame做了重新的设定：
+
+1.  不关心输入类型，可存储任意类型，包括list
+
+2.  支持任意的列名，会自动添加列名
+
+3.  会懒加载参数，并且按顺序运行，或者说tibble evaluates columns sequentially
+
+4.  对于subset操作，tibble不会造成困扰
+
+5.  tibble可以进行可控的数据类型转换
+
+    个人认为也有缺点，比如tibble的recycling仅限于长度为1或登场，而data.frame则为整除即可
+
+    另外，data.frame可以实现部分匹配，而tibble不可以
+
+    劣势就不做展示了
 
 ```{r}
 ## 代码写这里，并运行；
-
+cat('对于前两条优势，可以用之前题目中出现过的代码展示')
+tibble(
+  a = lubridate::now() + runif(1e3) * 86400,
+  b = lubridate::today() + runif(1e3) * 30,
+  c = 1:1e3,
+  d = runif(1e3),
+  e = sample(letters, 1e3, replace = TRUE)
+)
+cat('对于第三条，可以用PDF的代码展示')
+tibble(x=1:5,y=x^2)
+cat('对于第四条，可以用PDF的代码展示')
+df1 <- data.frame(x = 1:3, y = 3:1);
+class(df1[, 1:2]);
+class(df1[, 1]);  #会得到一个vector...
+df2 <- tibble(x = 1:3, y = 3:1);
+class(df2[, 1]);  #永远得到的都是tibble
+cat('对于第五条，可以用PDF的代码展示')
+class(df2[[1]]); ## 取一列，转换为vector
+class(df2$x); ## 用[[]] 或$ 都可以哦
 ```
 
 ## 练习与作业3：IO
@@ -446,7 +570,25 @@ tb <- tibble( name = character(), age = integer(), salary = double() );
 
 ```{r}
 ## 用系统自带函数，并显示读取的内容；
-
+read.csv('data/Table0.txt')
+read.csv('data/Table1.txt')
+read.csv('data/Table2.txt')
+read.csv('data/Table3.txt')
+read.csv('data/Table4.txt')
+read.csv('data/Table5.txt')
+read.csv('data/Table6.txt')
+read.csv('data/states1.csv')
+read.csv('data/states2.csv',header = F)
 ## 用readr 包的函数读取，并显示读取的内容；
+library(readr)
+read_csv('data/Table0.txt')
+read_csv('data/Table1.txt')
+read_csv('data/Table2.txt')
+read_csv('data/Table3.txt')
+read_csv('data/Table4.txt')
+read_csv('data/Table5.txt')
+read_csv('data/Table6.txt')
+read_csv('data/states1.csv')
+read_csv('data/states2.csv')
 
 ```
