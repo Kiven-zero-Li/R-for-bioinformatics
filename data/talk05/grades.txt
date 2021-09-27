@@ -7,4 +7,4 @@ Weihua Chen	English	99
 Weihua Chen	Bioinformatics	99
 Kang Ning	Bioinformatics	100
 Kang Ning	Chinese	20
-Kang Ning	Chemistry	76
+Kang Ning	Chemistry	76 
